@@ -2,54 +2,37 @@ import { app } from "../../scripts/app.js";
 import * as THREE from './three.module.js';
 import VoxelBlockRenderer from './voxel_block_renderer.js';
 import VoxelViewer from './voxel_viewer_scene.js';
-// import { OrbitControls } from './OrbitControls.js';
-
-console.log("Classes from THREE:");
-console.log(Object.keys(THREE).filter(key => typeof THREE[key] === 'function'));
-console.log("THREE classes:", THREE);
-
-
+import VoxelVideoPlayer from './VoxelVideoPlayer.js';
 class Visualizer {
     constructor(node, container, visualSrc) {
         this.node = node
         this.voxel_viewer = new VoxelViewer(container)
+        this.video_player = null;
 
         this.iframe = document.createElement('iframe')
         Object.assign(this.iframe, {
             scrolling: "no",
             overflow: "hidden",
         })
-        console.log({ visualSrc })
+        
         this.iframe.src = "./extensions/ComfyUI-Voxels/html/"+visualSrc+".html"
         container.appendChild(this.iframe);
         
         this.iframe.onload = () => {
             const iframeDocument = this.iframe.contentDocument || this.iframe.contentWindow.document;
             
-            const camera = new THREE.PerspectiveCamera(75, this.iframe.clientWidth / this.iframe.clientHeight, 0.1, 1000);
-            const renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(this.iframe.clientWidth, this.iframe.clientHeight);
-            iframeDocument.body.appendChild(renderer.domElement);
-            
-            const geometry = new THREE.BoxGeometry();
-            const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-            const cube = new THREE.Mesh(geometry, material);
-            this.voxel_viewer.getScene().add(cube);
-
-            camera.position.z = 5;
-
+            this.renderer.setSize(this.iframe.clientWidth, this.iframe.clientHeight);
+            iframeDocument.body.appendChild(this.renderer.domElement);
             
         };
     }
 
     updateVisual(params) {
-        console.log("UPDATE VISUAL")
-        console.log({params})
-
-        const voxelRenderer = new VoxelBlockRenderer(params);
-        const meshGroup = voxelRenderer.getMeshGroup();
         this.voxel_viewer.getScene().clear();
-        this.voxel_viewer.getScene().add(meshGroup);
+        if (this.video_player) {
+            this.video_player.stopPlayback();
+        }
+        this.video_player = new VoxelVideoPlayer(this.voxel_viewer, params);
     }
 
     remove() {
@@ -129,7 +112,8 @@ function createVisualizer(node, inputName, typeName, inputData, app) {
     // Make sure visualization iframe is always inside the node when resize the node
     node.onResize = function () {
         let [w, h] = this.size
-
+        // if (w <= 600) w = 600
+        // if (h <= 500) h = 500
         if (w > 600) {
             h = w - 100
         }
@@ -153,8 +137,9 @@ function createVisualizer(node, inputName, typeName, inputData, app) {
 }
 
 function registerVisualizer(nodeType, nodeData, nodeClassName, typeName) {
+    
     if (nodeData.name == nodeClassName) {
-        console.log("[3D Visualizer] Registering node: " + nodeData.name)
+        console.log("[3D Voxel Player] Registering node: " + nodeData.name)
 
         const onNodeCreated = nodeType.prototype.onNodeCreated
 
@@ -179,21 +164,20 @@ function registerVisualizer(nodeType, nodeData, nodeClassName, typeName) {
         }
 
         nodeType.prototype.onExecuted = async function (message) {
-            console.log("Voxel Viewer executed onExecuted")
-            console.log({ message })
-            // console.log({this})
-            if (message?.voxel_block) {
-                console.log("Voxel Viewer executed with Mesh")
-                this.updateParameters(message.voxel_block)
-                console.log("Voxel Viewer executed after")
-
+            console.log({message})
+            if (message?.voxel_video) {
+                console.log("Voxel Preview executed with Mesh")
+                console.log({message})
+                
+                this.updateParameters(message.voxel_video[0])
+                console.log("Voxel Preview executed after")
             }
         }
     }
 }
 
 app.registerExtension({
-    name: "a.unique.name.for.a.useless.extension",
+    name: "voxel.video.preview",
     async setup() {
     },
 
@@ -202,6 +186,6 @@ app.registerExtension({
     },
 
     async beforeRegisterNodeDef(nodeType, nodeData, app) {
-        registerVisualizer(nodeType, nodeData, "VoxelViewer", "three_js_visualizer")
+        registerVisualizer(nodeType, nodeData, "VoxelVideoPreview", "three_js_visualizer")
     },
 })

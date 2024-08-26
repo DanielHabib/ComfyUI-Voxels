@@ -1,120 +1,111 @@
-console.log("Above the imports")
 console.log(import.meta.url)
 // Debugger breakpoint
-import * as THREE from '../extern/three.module.js';
+import * as THREE from './three.module.js';
+
+console.log("Imported classes from THREE:", Object.keys(THREE));
 
 
+// import { api } from '../../../scripts/api.js'
 
-import { api } from '../../../scripts/api.js'
+// import { OrbitControls } from './OrbitControls.js';
+// console.log("Methods associated with OrbitControls:");
+// console.log(Object.getOwnPropertyNames(OrbitControls.prototype).filter(prop => typeof OrbitControls.prototype[prop] === 'function'));
 
-import { OrbitControls } from '../extern/jsm/controls/OrbitControls.js';
-import { RoomEnvironment } from '../extern/jsm/environments/RoomEnvironment.js';
-import { OBJLoader } from '../extern/jsm/loaders/OBJLoader.js';
+// import { RoomEnvironment } from './RoomEnvironment.js';
 
-console.log("TOP OF js file")
-const visualizer = document.getElementById("visualizer");
-const container = document.getElementById( 'container' );
-// const progressDialog = document.getElementById("progress-dialog");
-// const progressIndicator = document.getElementById("progress-indicator");
+// document.addEventListener("DOMContentLoaded", function () {
 
-const renderer = new THREE.WebGLRenderer( { antialias: true } );
-renderer.setPixelRatio( window.devicePixelRatio );
-renderer.setSize( window.innerWidth, window.innerHeight );
-container.appendChild( renderer.domElement );
+//     const visualizer = document.getElementById("visualizer");
+//     const container = document.getElementById("container");
+//     // // const progressDialog = document.getElementById("progress-dialog");
+//     // // const progressIndicator = document.getElementById("progress-indicator");
 
-const pmremGenerator = new THREE.PMREMGenerator( renderer );
+//     const renderer = new THREE.WebGLRenderer({ antialias: true });
+//     renderer.setPixelRatio(window.devicePixelRatio);
+//     renderer.setSize(window.innerWidth, window.innerHeight);
+//     container.appendChild(renderer.domElement);
 
-// scene
-const scene = new THREE.Scene();
-scene.background = new THREE.Color( 0x000000 );
-scene.environment = pmremGenerator.fromScene( new RoomEnvironment( renderer ), 0.04 ).texture;
+//     const pmremGenerator = new THREE.PMREMGenerator(renderer);
 
-const ambientLight = new THREE.AmbientLight( 0xffffff );
+//     // // scene
+//     const scene = new THREE.Scene();
+//     scene.background = new THREE.Color(0x000000);
+//     scene.environment = pmremGenerator.fromScene(new RoomEnvironment(renderer), 0.04).texture;
 
-const camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 100 );
-camera.position.set( 5, 2, 8 );
-const pointLight = new THREE.PointLight( 0xffffff, 15 );
-camera.add( pointLight );
+//     const gridHelper = new THREE.GridHelper(10, 10); // Size and divisions
+//     scene.add(gridHelper);
 
-const controls = new OrbitControls( camera, renderer.domElement );
-controls.target.set( 0, 0.5, 0 );
-controls.update();
-controls.enablePan = true;
-controls.enableDamping = true;
+//     const ambientLight = new THREE.AmbientLight(0xffffff);
 
-// Handle window reseize event
-window.onresize = function () {
+//     const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 100);
+//     camera.position.set(5, 2, 8);
+//     const pointLight = new THREE.PointLight(0xffffff, 15);
+//     camera.add(pointLight);
 
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
+//     const controls = new OrbitControls(camera, renderer.domElement);
+//     controls.target.set(0, 0.5, 0);
+//     controls.update();
+//     controls.enablePan = true;
+//     controls.enableDamping = true;
 
-    renderer.setSize( window.innerWidth, window.innerHeight );
+//     // // Handle window reseize event
+//     window.onresize = function () {
 
-};
+//         camera.aspect = window.innerWidth / window.innerHeight;
+//         camera.updateProjectionMatrix();
+
+//         renderer.setSize(window.innerWidth, window.innerHeight);
+
+//     };
 
 
-var lastFilepath = "";
-var needUpdate = false;
+//     var lastFilepath = "";
+//     var needUpdate = false;
 
-function frameUpdate() {
-    
-    var filepath = visualizer.getAttribute("filepath");
-    if (filepath == lastFilepath){
-        if (needUpdate){
-            controls.update();
-            renderer.render( scene, camera );
-        }
-        requestAnimationFrame( frameUpdate );
-    } else {
-        needUpdate = false;
-        scene.clear();
-        // progressDialog.open = true;
-        lastFilepath = filepath;
-        main(JSON.parse(lastFilepath));
-    }
-}
+//     function frameUpdate() {
+//         // console.log("Rendering frame..."); // Log when rendering occurs
 
-const onProgress = function ( xhr ) {
-    if ( xhr.lengthComputable ) {
-        // progressIndicator.value = xhr.loaded / xhr.total * 100;
-    }
-};
-const onError = function ( e ) {
-    console.error( e );
-};
+//         var filepath = visualizer.getAttribute("filepath");
+//         if (filepath == lastFilepath) {
+//             if (needUpdate) {
+//                 controls.update();
+//                 renderer.render(scene, camera);
+//             }
+//             // requestAnimationFrame( frameUpdate );
+//         } else {
+//             needUpdate = false;
+//             scene.clear();
+//             // progressDialog.open = true;
+//             lastFilepath = filepath;
+//             main(JSON.parse(lastFilepath));
+//         }
+//     }
 
-async function main(params) {
-    // console.log({params})
-    console.log("INSIDE THREE_JS_VISUALIZER")
-    if(params?.filename){
-        const url = api.apiURL('/view?' + new URLSearchParams(params)).replace(/extensions.*\//,"");
-        const fileExt = params.filename.slice(params.filename.lastIndexOf(".")+1)
+//     const onProgress = function (xhr) {
+//         if (xhr.lengthComputable) {
+//             // progressIndicator.value = xhr.loaded / xhr.total * 100;
+//         }
+//     };
+//     const onError = function (e) {
+//         console.error(e);
+//     };
 
-        if (fileExt == "obj"){
-            const loader = new OBJLoader();
+//     async function main(params) {
+//         console.log({ "voxel_block": visualizer.getAttribute("voxel_block") })
+//         console.log("INSIDE THREE_JS_VISUALIZER")
+      
+//         scene.add(ambientLight);
+//         scene.add(camera);
+//         // Add a cube to the scene
+//         const geometry = new THREE.BoxGeometry();
+//         const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+//         const cube = new THREE.Mesh(geometry, material);
+//         scene.add(cube);
 
-            loader.load( url, function ( obj ) {
-                obj.scale.setScalar( 5 );
-                console.log(obj)
-                scene.add( obj );
-                obj.traverse(node => {
-                    if (node.material && node.material.map == null) {
-                        node.material.vertexColors = true;
-                    }
-                  });
+//         // progressDialog.close();
+//         renderer.render(scene, camera);
+//         // frameUpdate();
+//     }
 
-            }, onProgress, onError );
-        }
-
-        needUpdate = true;
-    }
-
-    scene.add( ambientLight );
-    scene.add( camera );
-
-    // progressDialog.close();
-
-    frameUpdate();
-}
-
-main();
+//    main();
+// });
